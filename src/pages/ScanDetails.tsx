@@ -29,7 +29,7 @@ const mockScanHistory = [
       },
       threatsByType: {}
     },
-    threats: []
+    threats: [] as Threat[]
   },
   {
     id: "scan-002",
@@ -58,7 +58,7 @@ const mockScanHistory = [
         id: "mal-006",
         name: "Sentinel.Malware.Generic",
         filePath: "downloads/suspicious-file.exe",
-        severity: "medium",
+        severity: "medium" as "medium",
         type: "malware",
         detectionMethod: "Signature matching"
       },
@@ -66,11 +66,11 @@ const mockScanHistory = [
         id: "spy-003",
         name: "Sentinel.Spyware.KeyLogger",
         filePath: "downloads/free-tool.exe",
-        severity: "high",
+        severity: "high" as "high",
         type: "spyware",
         detectionMethod: "Heuristic analysis"
       }
-    ]
+    ] as Threat[]
   },
   {
     id: "scan-003",
@@ -98,11 +98,11 @@ const mockScanHistory = [
         id: "ran-004",
         name: "Sentinel.Ransomware.Encrypt",
         filePath: "downloads/attachment.zip",
-        severity: "critical",
+        severity: "critical" as "critical",
         type: "ransomware",
         detectionMethod: "Behavioral analysis"
       }
-    ]
+    ] as Threat[]
   },
   {
     id: "scan-004",
@@ -123,7 +123,7 @@ const mockScanHistory = [
       },
       threatsByType: {}
     },
-    threats: []
+    threats: [] as Threat[]
   }
 ];
 
