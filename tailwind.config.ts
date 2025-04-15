@@ -52,6 +52,14 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				sentinel: {
+					dark: '#1A1F2C',
+					purple: '#9b87f5',
+					blue: '#1EAEDB',
+					red: '#ea384c',
+					gray: '#8E9196',
+					lightGray: '#F1F1F1',
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
