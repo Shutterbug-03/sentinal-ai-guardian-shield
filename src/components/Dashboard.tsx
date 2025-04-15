@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Shield, 
@@ -8,7 +9,10 @@ import {
   Clock, 
   FileText, 
   Folder,
-  ChevronRight
+  ChevronRight,
+  Settings,
+  LineChart,
+  Lock
 } from "lucide-react";
 
 interface DashboardProps {
@@ -19,13 +23,17 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, protectionStatus = "protected" }: DashboardProps) {
+  const navigate = useNavigate();
+  
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {/* Protection Status Card */}
-      <Card className={`col-span-2 overflow-hidden ${
-        protectionStatus === "protected" ? "border-green-500 shadow-green-500/20" : 
-        protectionStatus === "at-risk" ? "border-red-500 shadow-red-500/20" : ""
-      }`}>
+      <Card 
+        className={`col-span-2 overflow-hidden ${
+          protectionStatus === "protected" ? "border-green-500 shadow-green-500/20" : 
+          protectionStatus === "at-risk" ? "border-red-500 shadow-red-500/20" : ""
+        }`}
+      >
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             {protectionStatus === "protected" ? (
@@ -43,7 +51,10 @@ export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, prot
         </CardHeader>
         <CardContent className="pb-3">
           <div className="flex flex-col space-y-4">
-            <div className="flex justify-between items-center">
+            <div 
+              className="flex justify-between items-center cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+              onClick={() => navigate("/protection")}
+            >
               <div className="flex items-center gap-2">
                 <Shield className="text-primary h-5 w-5" />
                 <span className="text-sm font-medium">Real-time Protection</span>
@@ -55,7 +66,10 @@ export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, prot
               </div>
             </div>
             
-            <div className="flex justify-between items-center">
+            <div 
+              className="flex justify-between items-center cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+              onClick={() => navigate("/scan-history")}
+            >
               <div className="flex items-center gap-2">
                 <Clock className="text-primary h-5 w-5" />
                 <span className="text-sm font-medium">Last Scan</span>
@@ -65,7 +79,10 @@ export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, prot
               </div>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div 
+              className="flex justify-between items-center cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+              onClick={() => navigate("/scan-history")}
+            >
               <div className="flex items-center gap-2">
                 <FileText className="text-primary h-5 w-5" />
                 <span className="text-sm font-medium">Threats Detected</span>
@@ -90,9 +107,12 @@ export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, prot
       </Card>
 
       {/* Quick Stats Card */}
-      <Card>
+      <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate("/protection")}>
         <CardHeader>
-          <CardTitle>System Protection</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>System Protection</span>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </CardTitle>
           <CardDescription>Security metrics</CardDescription>
         </CardHeader>
         <CardContent>
@@ -117,6 +137,39 @@ export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, prot
               value="Checking..." 
               status="pending" 
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions Cards */}
+      <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate("/scan-history")}>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Scan History</span>
+            <LineChart className="h-5 w-5 text-muted-foreground" />
+          </CardTitle>
+          <CardDescription>View previous scan results</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center text-center py-4">
+            <Clock className="h-8 w-8 text-primary mb-2" />
+            <p className="text-sm">Access detailed reports of previous scans and threat detections</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate("/settings")}>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Settings</span>
+            <Settings className="h-5 w-5 text-muted-foreground" />
+          </CardTitle>
+          <CardDescription>Configure security preferences</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center text-center py-4">
+            <Lock className="h-8 w-8 text-primary mb-2" />
+            <p className="text-sm">Customize scan options, scheduling, and protection features</p>
           </div>
         </CardContent>
       </Card>

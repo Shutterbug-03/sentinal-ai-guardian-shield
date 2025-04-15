@@ -1,13 +1,17 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { 
   Shield, 
   Menu, 
   Bell, 
   Settings, 
   ChevronDown,
-  AlertCircle
+  AlertCircle,
+  LineChart,
+  ShieldCheck,
+  User
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -24,22 +28,28 @@ interface HeaderProps {
 
 export function Header({ threatCount = 0 }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    return location.pathname === path ? "text-primary" : "transition-colors hover:text-foreground/80";
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-card/80 backdrop-blur-sm border-b shadow-sm">
       <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <Shield className="h-6 w-6 text-primary" />
           <div className="font-bold text-xl">Sentinel-AI</div>
-        </div>
+        </Link>
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
           <nav className="flex items-center gap-6 text-sm font-medium">
-            <a href="#" className="transition-colors hover:text-foreground/80">Dashboard</a>
-            <a href="#" className="transition-colors hover:text-foreground/80">Scans</a>
-            <a href="#" className="transition-colors hover:text-foreground/80">Protection</a>
-            <a href="#" className="transition-colors hover:text-foreground/80">Settings</a>
+            <Link to="/" className={isActive("/")}>Dashboard</Link>
+            <Link to="/scan-history" className={isActive("/scan-history")}>Scans</Link>
+            <Link to="/protection" className={isActive("/protection")}>Protection</Link>
+            <Link to="/settings" className={isActive("/settings")}>Settings</Link>
           </nav>
           
           <div className="flex items-center gap-2">
@@ -58,7 +68,7 @@ export function Header({ threatCount = 0 }: HeaderProps) {
                 <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {threatCount > 0 ? (
-                  <DropdownMenuItem className="flex items-center gap-2">
+                  <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate("/scan-history")}>
                     <AlertCircle className="h-4 w-4 text-destructive" />
                     <span>{threatCount} threats detected</span>
                   </DropdownMenuItem>
@@ -77,9 +87,22 @@ export function Header({ threatCount = 0 }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Preferences</DropdownMenuItem>
-                <DropdownMenuItem>Update Database</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/protection")}>
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  Protection
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/scan-history")}>
+                  <LineChart className="mr-2 h-4 w-4" />
+                  Statistics
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Help & Support</DropdownMenuItem>
               </DropdownMenuContent>
@@ -102,15 +125,15 @@ export function Header({ threatCount = 0 }: HeaderProps) {
       {isMobileMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="flex flex-col divide-y">
-            <a href="#" className="px-4 py-3 hover:bg-muted transition-colors">Dashboard</a>
-            <a href="#" className="px-4 py-3 hover:bg-muted transition-colors">Scans</a>
-            <a href="#" className="px-4 py-3 hover:bg-muted transition-colors">Protection</a>
-            <a href="#" className="px-4 py-3 hover:bg-muted transition-colors">Settings</a>
+            <Link to="/" className="px-4 py-3 hover:bg-muted transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+            <Link to="/scan-history" className="px-4 py-3 hover:bg-muted transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Scans</Link>
+            <Link to="/protection" className="px-4 py-3 hover:bg-muted transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Protection</Link>
+            <Link to="/settings" className="px-4 py-3 hover:bg-muted transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Settings</Link>
             {threatCount > 0 && (
-              <a href="#" className="px-4 py-3 hover:bg-muted transition-colors flex items-center gap-2">
+              <Link to="/scan-history" className="px-4 py-3 hover:bg-muted transition-colors flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
                 <AlertCircle className="h-4 w-4 text-destructive" />
                 <span>{threatCount} threats detected</span>
-              </a>
+              </Link>
             )}
           </nav>
         </div>
