@@ -1,29 +1,47 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Shield, 
   ShieldCheck, 
   ShieldAlert, 
+  ShieldX,
   Clock, 
   FileText, 
   Folder,
   ChevronRight,
   Settings,
   LineChart,
-  Lock
+  Lock,
+  Brain
 } from "lucide-react";
+import { useProtectionStore } from "@/store/protectionStore";
+import { useScanHistoryStore } from "@/store/scanHistoryStore";
+import { evaluateSystemRisk } from "@/utils/aiThreatDetection";
 
 interface DashboardProps {
   onStartScan: () => void;
   lastScanDate?: string;
   threatsDetected?: number;
-  protectionStatus?: "protected" | "at-risk" | "unknown";
 }
 
-export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, protectionStatus = "protected" }: DashboardProps) {
+export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0 }: DashboardProps) {
   const navigate = useNavigate();
+  const { features, aiEnabled } = useProtectionStore();
+  const { scans } = useScanHistoryStore();
+  const [protectionStatus, setProtectionStatus] = useState<"protected" | "at-risk" | "compromised">("protected");
+  
+  useEffect(() => {
+    // Determine protection status
+    if (aiEnabled) {
+      const { status } = evaluateSystemRisk(scans);
+      setProtectionStatus(status === 'safe' ? 'protected' : status as any);
+    } else {
+      const inactiveFeatures = features.filter(feature => feature.status === 'inactive');
+      setProtectionStatus(inactiveFeatures.length > 0 ? 'at-risk' : 'protected');
+    }
+  }, [features, scans, aiEnabled]);
   
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -31,22 +49,27 @@ export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, prot
       <Card 
         className={`col-span-2 overflow-hidden ${
           protectionStatus === "protected" ? "border-green-500 shadow-green-500/20" : 
-          protectionStatus === "at-risk" ? "border-red-500 shadow-red-500/20" : ""
+          protectionStatus === "at-risk" ? "border-yellow-500 shadow-yellow-500/20" :
+          "border-red-500 shadow-red-500/20"
         }`}
       >
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             {protectionStatus === "protected" ? (
               <ShieldCheck className="h-6 w-6 text-green-500" />
+            ) : protectionStatus === "at-risk" ? (
+              <ShieldAlert className="h-6 w-6 text-yellow-500" />
             ) : (
-              <ShieldAlert className="h-6 w-6 text-red-500" />
+              <ShieldX className="h-6 w-6 text-red-500" />
             )}
             Protection Status
           </CardTitle>
           <CardDescription>
             {protectionStatus === "protected" 
               ? "Your system is fully protected" 
-              : "Your system requires attention"}
+              : protectionStatus === "at-risk"
+              ? "Your system requires attention"
+              : "Critical security issue detected"}
           </CardDescription>
         </CardHeader>
         <CardContent className="pb-3">
@@ -60,22 +83,26 @@ export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, prot
                 <span className="text-sm font-medium">Real-time Protection</span>
               </div>
               <div className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                protectionStatus === "protected" ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
+                features.find(f => f.id === 'real-time')?.status === 'active' 
+                  ? "bg-green-500/20 text-green-500" 
+                  : "bg-red-500/20 text-red-500"
               }`}>
-                {protectionStatus === "protected" ? "Active" : "Inactive"}
+                {features.find(f => f.id === 'real-time')?.status === 'active' ? "Active" : "Inactive"}
               </div>
             </div>
             
             <div 
               className="flex justify-between items-center cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
-              onClick={() => navigate("/scan-history")}
+              onClick={() => navigate("/protection")}
             >
               <div className="flex items-center gap-2">
-                <Clock className="text-primary h-5 w-5" />
-                <span className="text-sm font-medium">Last Scan</span>
+                <Brain className="text-primary h-5 w-5" />
+                <span className="text-sm font-medium">AI Protection</span>
               </div>
-              <div className="text-sm">
-                {lastScanDate || "No scan history"}
+              <div className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                aiEnabled ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
+              }`}>
+                {aiEnabled ? "Active" : "Inactive"}
               </div>
             </div>
 
@@ -124,18 +151,18 @@ export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0, prot
             />
             <ProtectionMetric 
               label="Web Protection" 
-              value="Active" 
-              status="good" 
+              value={features.find(f => f.id === 'web-shield')?.status === 'active' ? "Active" : "Inactive"} 
+              status={features.find(f => f.id === 'web-shield')?.status === 'active' ? "good" : "critical"} 
             />
             <ProtectionMetric 
-              label="Firewall" 
-              value="Enabled" 
-              status="good" 
+              label="AI Engine" 
+              value={aiEnabled ? "Enabled" : "Disabled"} 
+              status={aiEnabled ? "good" : "warning"} 
             />
             <ProtectionMetric 
-              label="System Updates" 
-              value="Checking..." 
-              status="pending" 
+              label="Learning Mode" 
+              value={aiEnabled && useProtectionStore.getState().aiLearningMode ? "Active" : "Inactive"} 
+              status={aiEnabled && useProtectionStore.getState().aiLearningMode ? "good" : "pending"} 
             />
           </div>
         </CardContent>

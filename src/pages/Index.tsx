@@ -6,7 +6,9 @@ import { FileScanner } from "@/components/FileScanner";
 import { ThreatReport } from "@/components/ThreatReport";
 import { ScanResult, ScanSummary, Threat, formatFileSize } from "@/utils/scannerUtils";
 import { useScanHistoryStore, ScanHistoryItem } from "@/store/scanHistoryStore";
+import { useProtectionStore } from "@/store/protectionStore";
 import { useToast } from "@/hooks/use-toast";
+import { initializeThreatModel } from "@/utils/aiThreatDetection";
 
 enum AppView {
   DASHBOARD,
@@ -21,7 +23,17 @@ export default function Index() {
   const [lastScanDate, setLastScanDate] = useState<string>("");
   const [allThreats, setAllThreats] = useState<Threat[]>([]);
   const { addScan, scans } = useScanHistoryStore();
+  const { aiEnabled, aiLearningMode } = useProtectionStore();
   const { toast } = useToast();
+  
+  // Initialize AI model
+  useEffect(() => {
+    if (aiEnabled && scans.length > 0) {
+      initializeThreatModel(scans).then(() => {
+        console.log('AI threat model initialized');
+      });
+    }
+  }, [aiEnabled, scans]);
   
   // Calculate threats from scan history
   useEffect(() => {
@@ -68,6 +80,13 @@ export default function Index() {
       variant: summary.threatsFound > 0 ? "destructive" : "default",
     });
     
+    // Train AI model if learning mode is enabled
+    if (aiEnabled && aiLearningMode) {
+      initializeThreatModel([...scans, newScanHistoryItem]).then(() => {
+        console.log('AI model updated with new scan data');
+      });
+    }
+    
     // Show the report view
     setView(AppView.REPORT);
   };
@@ -89,7 +108,6 @@ export default function Index() {
             onStartScan={startNewScan} 
             lastScanDate={lastScanDate || (scans.length > 0 ? scans[0].date.toLocaleString() : "")}
             threatsDetected={allThreats.length}
-            protectionStatus={allThreats.length > 0 ? "at-risk" : "protected"}
           />
         )}
         
