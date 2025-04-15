@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ScanHistory from "./pages/ScanHistory";
+import ScanDetails from "./pages/ScanDetails";
 import Protection from "./pages/Protection";
 import Settings from "./pages/Settings";
 
@@ -22,6 +23,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/scan-history" element={<ScanHistory />} />
+            <Route path="/scan-details/:id" element={<ScanDetails />} />
             <Route path="/protection" element={<Protection />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

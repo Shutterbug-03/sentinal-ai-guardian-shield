@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { ScanResult } from "@/utils/scannerUtils";
 
-// Mock data for scan history
+// Mock data for scan history with more detailed information
 const mockScanHistory = [
   {
     id: "scan-001",
@@ -23,7 +23,20 @@ const mockScanHistory = [
     duration: "3m 42s",
     filesScanned: 1245,
     threatsDetected: 0,
-    status: "clean"
+    status: "clean",
+    summary: {
+      scannedFiles: 1245,
+      threatsFound: 0,
+      scanDuration: 222,
+      threatsBySeverity: {
+        low: 0,
+        medium: 0,
+        high: 0,
+        critical: 0
+      },
+      threatsByType: {}
+    },
+    threats: []
   },
   {
     id: "scan-002",
@@ -31,7 +44,40 @@ const mockScanHistory = [
     duration: "5m 18s",
     filesScanned: 2103,
     threatsDetected: 2,
-    status: "threats-found"
+    status: "threats-found",
+    summary: {
+      scannedFiles: 2103,
+      threatsFound: 2,
+      scanDuration: 318,
+      threatsBySeverity: {
+        low: 0,
+        medium: 1,
+        high: 1,
+        critical: 0
+      },
+      threatsByType: {
+        "malware": 1,
+        "spyware": 1
+      }
+    },
+    threats: [
+      {
+        id: "mal-006",
+        name: "Sentinel.Malware.Generic",
+        filePath: "downloads/suspicious-file.exe",
+        severity: "medium",
+        type: "malware",
+        detectionMethod: "Signature matching"
+      },
+      {
+        id: "spy-003",
+        name: "Sentinel.Spyware.KeyLogger",
+        filePath: "downloads/free-tool.exe",
+        severity: "high",
+        type: "spyware",
+        detectionMethod: "Heuristic analysis"
+      }
+    ]
   },
   {
     id: "scan-003",
@@ -39,7 +85,31 @@ const mockScanHistory = [
     duration: "4m 9s",
     filesScanned: 1876,
     threatsDetected: 1,
-    status: "threats-found"
+    status: "threats-found",
+    summary: {
+      scannedFiles: 1876,
+      threatsFound: 1,
+      scanDuration: 249,
+      threatsBySeverity: {
+        low: 0,
+        medium: 0,
+        high: 0,
+        critical: 1
+      },
+      threatsByType: {
+        "ransomware": 1
+      }
+    },
+    threats: [
+      {
+        id: "ran-004",
+        name: "Sentinel.Ransomware.Encrypt",
+        filePath: "downloads/attachment.zip",
+        severity: "critical",
+        type: "ransomware",
+        detectionMethod: "Behavioral analysis"
+      }
+    ]
   },
   {
     id: "scan-004",
@@ -47,7 +117,20 @@ const mockScanHistory = [
     duration: "2m 56s",
     filesScanned: 943,
     threatsDetected: 0,
-    status: "clean"
+    status: "clean",
+    summary: {
+      scannedFiles: 943,
+      threatsFound: 0,
+      scanDuration: 176,
+      threatsBySeverity: {
+        low: 0,
+        medium: 0,
+        high: 0,
+        critical: 0
+      },
+      threatsByType: {}
+    },
+    threats: []
   }
 ];
 
@@ -56,8 +139,7 @@ export default function ScanHistory() {
   const [scanHistory] = useState(mockScanHistory);
   
   const viewScanDetails = (scanId: string) => {
-    // In a real app, this would navigate to scan details page
-    console.log(`Viewing scan details for: ${scanId}`);
+    navigate(`/scan-details/${scanId}`);
   };
   
   return (
