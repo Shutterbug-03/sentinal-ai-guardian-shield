@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -13,130 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScanResult } from "@/utils/scannerUtils";
-
-// Mock data for scan history with more detailed information
-const mockScanHistory = [
-  {
-    id: "scan-001",
-    date: new Date(2023, 3, 15, 9, 30),
-    duration: "3m 42s",
-    filesScanned: 1245,
-    threatsDetected: 0,
-    status: "clean",
-    summary: {
-      scannedFiles: 1245,
-      threatsFound: 0,
-      scanDuration: 222,
-      threatsBySeverity: {
-        low: 0,
-        medium: 0,
-        high: 0,
-        critical: 0
-      },
-      threatsByType: {}
-    },
-    threats: []
-  },
-  {
-    id: "scan-002",
-    date: new Date(2023, 3, 10, 14, 15),
-    duration: "5m 18s",
-    filesScanned: 2103,
-    threatsDetected: 2,
-    status: "threats-found",
-    summary: {
-      scannedFiles: 2103,
-      threatsFound: 2,
-      scanDuration: 318,
-      threatsBySeverity: {
-        low: 0,
-        medium: 1,
-        high: 1,
-        critical: 0
-      },
-      threatsByType: {
-        "malware": 1,
-        "spyware": 1
-      }
-    },
-    threats: [
-      {
-        id: "mal-006",
-        name: "Sentinel.Malware.Generic",
-        filePath: "downloads/suspicious-file.exe",
-        severity: "medium",
-        type: "malware",
-        detectionMethod: "Signature matching"
-      },
-      {
-        id: "spy-003",
-        name: "Sentinel.Spyware.KeyLogger",
-        filePath: "downloads/free-tool.exe",
-        severity: "high",
-        type: "spyware",
-        detectionMethod: "Heuristic analysis"
-      }
-    ]
-  },
-  {
-    id: "scan-003",
-    date: new Date(2023, 3, 5, 10, 0),
-    duration: "4m 9s",
-    filesScanned: 1876,
-    threatsDetected: 1,
-    status: "threats-found",
-    summary: {
-      scannedFiles: 1876,
-      threatsFound: 1,
-      scanDuration: 249,
-      threatsBySeverity: {
-        low: 0,
-        medium: 0,
-        high: 0,
-        critical: 1
-      },
-      threatsByType: {
-        "ransomware": 1
-      }
-    },
-    threats: [
-      {
-        id: "ran-004",
-        name: "Sentinel.Ransomware.Encrypt",
-        filePath: "downloads/attachment.zip",
-        severity: "critical",
-        type: "ransomware",
-        detectionMethod: "Behavioral analysis"
-      }
-    ]
-  },
-  {
-    id: "scan-004",
-    date: new Date(2023, 2, 28, 19, 45),
-    duration: "2m 56s",
-    filesScanned: 943,
-    threatsDetected: 0,
-    status: "clean",
-    summary: {
-      scannedFiles: 943,
-      threatsFound: 0,
-      scanDuration: 176,
-      threatsBySeverity: {
-        low: 0,
-        medium: 0,
-        high: 0,
-        critical: 0
-      },
-      threatsByType: {}
-    },
-    threats: []
-  }
-];
+import { useScanHistoryStore } from "@/store/scanHistoryStore";
 
 export default function ScanHistory() {
   const navigate = useNavigate();
-  const [scanHistory] = useState(mockScanHistory);
+  const { scans } = useScanHistoryStore();
   
   const viewScanDetails = (scanId: string) => {
     navigate(`/scan-details/${scanId}`);
@@ -146,11 +27,16 @@ export default function ScanHistory() {
     <div className="min-h-screen flex flex-col">
       <Header threatCount={3} />
       <main className="flex-1 container py-8">
-        <div className="flex items-center gap-2 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-            <ArrowLeft className="h-5 w-5" />
+        <div className="flex items-center justify-between gap-2 mb-6">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold">Scan History</h1>
+          </div>
+          <Button variant="outline" onClick={() => navigate("/")}>
+            New Scan
           </Button>
-          <h1 className="text-2xl font-bold">Scan History</h1>
         </div>
         
         <div className="rounded-lg border bg-card">
@@ -166,7 +52,7 @@ export default function ScanHistory() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {scanHistory.map((scan) => (
+              {scans.map((scan) => (
                 <TableRow key={scan.id}>
                   <TableCell>
                     <div className="flex flex-col">
