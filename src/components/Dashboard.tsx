@@ -45,16 +45,18 @@ export function Dashboard({ onStartScan, lastScanDate = "", threatsDetected = 0 
   
   return (
     <div className="flex flex-col gap-6">
-      {/* Scan Button at the top */}
-      <div className="flex justify-center w-full">
+      {/* Scan Button Section */}
+      <div className="flex flex-col items-center w-full">
         <Button 
           onClick={onStartScan}
           className="px-8 py-6 text-lg font-medium flex items-center gap-3 shadow-lg hover:shadow-xl transition-all rounded-full"
         >
           <Scan className="h-6 w-6" />
           New Scan
-          <span className="text-xs text-muted-foreground ml-2">Detect potential threats</span>
         </Button>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Detect potential threats
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
