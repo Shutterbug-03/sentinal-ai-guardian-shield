@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +17,11 @@ import { evaluateSystemRisk } from "@/utils/aiThreatDetection";
 
 interface DashboardProps {
   onStartScan: () => void;
+  lastScanDate?: string;
+  threatsDetected?: number;
 }
 
-export function Dashboard({ onStartScan }: DashboardProps) {
+export function Dashboard({ onStartScan, lastScanDate = "", threatsDetected = 0 }: DashboardProps) {
   const navigate = useNavigate();
   const { features, aiEnabled } = useProtectionStore();
   const { scans } = useScanHistoryStore();
