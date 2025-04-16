@@ -47,21 +47,21 @@ export function Dashboard({ onStartScan, lastScanDate = "", threatsDetected = 0 
   
   return (
     <div className="flex flex-col gap-6">
-      {/* Prominent Round Scan Button at the top */}
-      <div className="flex justify-center w-full mb-4">
+      {/* Scan Button at the top */}
+      <div className="flex justify-center w-full">
         <Button 
           onClick={onStartScan}
-          className="rounded-full w-32 h-32 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all"
+          className="px-8 py-6 text-lg font-medium flex items-center gap-3 shadow-lg hover:shadow-xl transition-all"
         >
-          <Scan className="h-10 w-10" />
-          <span className="text-base font-medium">New Scan</span>
+          <Scan className="h-6 w-6" />
+          Start New System Scan
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Protection Status Card */}
         <Card 
-          className={`overflow-hidden ${
+          className={`col-span-2 overflow-hidden ${
             protectionStatus === "protected" ? "border-green-500 shadow-green-500/20" : 
             protectionStatus === "at-risk" ? "border-yellow-500 shadow-yellow-500/20" :
             "border-red-500 shadow-red-500/20"
@@ -76,7 +76,7 @@ export function Dashboard({ onStartScan, lastScanDate = "", threatsDetected = 0 
               ) : (
                 <ShieldX className="h-6 w-6 text-red-500" />
               )}
-              Protection Status
+              Real-Time Protection Status
             </CardTitle>
             <CardDescription>
               {protectionStatus === "protected" 
@@ -128,7 +128,42 @@ export function Dashboard({ onStartScan, lastScanDate = "", threatsDetected = 0 
           </CardContent>
         </Card>
 
-        {/* Scan History Card */}
+        {/* Quick Stats Card */}
+        <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate("/protection")}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <span>Protection Summary</span>
+            </CardTitle>
+            <CardDescription>Active security measures</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col space-y-4">
+              <ProtectionMetric 
+                label="Active Features" 
+                value={`${features.filter(feature => feature.status === 'active').length}/${features.length}`} 
+                status={features.filter(feature => feature.status === 'active').length === features.length ? "good" : features.filter(feature => feature.status === 'active').length === 0 ? "critical" : "warning"} 
+              />
+              <ProtectionMetric 
+                label="AI Protection" 
+                value={aiEnabled ? "Active" : "Inactive"} 
+                status={aiEnabled ? "good" : "pending"} 
+              />
+              <ProtectionMetric 
+                label="Learning Mode" 
+                value={aiEnabled && useProtectionStore.getState().aiLearningMode ? "Active" : "Inactive"} 
+                status={aiEnabled && useProtectionStore.getState().aiLearningMode ? "good" : "pending"} 
+              />
+              <ProtectionMetric 
+                label="System Status" 
+                value={protectionStatus === "protected" ? "Protected" : protectionStatus === "at-risk" ? "At Risk" : "Alert"} 
+                status={protectionStatus === "protected" ? "good" : protectionStatus === "at-risk" ? "warning" : "critical"} 
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions Cards */}
         <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate("/scan-history")}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -140,16 +175,19 @@ export function Dashboard({ onStartScan, lastScanDate = "", threatsDetected = 0 
           <CardContent>
             <div className="flex flex-col items-center justify-center text-center py-4">
               <p className="text-sm">Access detailed reports of previous scans and threat detections</p>
-              {lastScanDate && (
-                <div className="mt-2 text-sm">
-                  <span className="font-medium">Last scan:</span> {lastScanDate}
-                </div>
-              )}
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  onStartScan(); 
+                }} 
+                className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm transition-colors"
+              >
+                Run New Scan
+              </button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Settings Card */}
         <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate("/settings")}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
