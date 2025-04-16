@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft, 
-  Clock, 
   ShieldCheck,
   ShieldAlert, 
   ShieldX,
   Globe, 
-  Lock, 
+  Lock,
   AlertCircle,
   CheckCircle2,
   UserCheck,
@@ -59,11 +58,11 @@ export default function Protection() {
   // Initialize AI model
   useEffect(() => {
     const initAI = async () => {
-      if (aiEnabled && scans.length > 0) {
+      if (aiEnabled) {
         await initializeThreatModel(scans);
         toast({
           title: "AI Protection Initialized",
-          description: "Threat detection model has been trained with your scan history.",
+          description: "Threat detection model has been prepared for your system.",
         });
       }
     };
@@ -78,10 +77,11 @@ export default function Protection() {
   // Evaluate system risk using AI
   useEffect(() => {
     if (aiEnabled) {
-      const { status } = evaluateSystemRisk(scans);
+      const activeFeatureCount = features.filter(feature => feature.status === 'active').length;
+      const { status } = evaluateSystemRisk(scans, activeFeatureCount);
       setSystemStatus(status === 'safe' ? 'protected' : status as any);
     }
-  }, [aiEnabled, scans, setSystemStatus]);
+  }, [aiEnabled, scans, setSystemStatus, features]);
   
   // Get overall protection status
   const getProtectionStatus = () => {
@@ -89,31 +89,31 @@ export default function Protection() {
       const activeFeatures = features.filter(feature => feature.status === 'active');
       return activeFeatures.length === features.length ? 'protected' : 'at-risk';
     } else {
-      // Use AI-based risk evaluation
-      const { status } = evaluateSystemRisk(scans);
+      // Use AI-based risk evaluation with active feature count
+      const activeFeatureCount = features.filter(feature => feature.status === 'active').length;
+      const { status } = evaluateSystemRisk(scans, activeFeatureCount);
       return status === 'safe' ? 'protected' : status;
     }
   };
   
   const protectionStatus = getProtectionStatus();
+  const activeFeatures = features.filter(feature => feature.status === 'active');
   const inactiveFeatures = features.filter(feature => feature.status === 'inactive');
   
   const handleToggleProtectionFeature = (id: string) => {
     console.log(`Toggling protection feature: ${id}`);
     toggleFeature(id);
     
-    if (id === 'real-time') {
-      const feature = features.find(f => f.id === id);
-      const newStatus = feature?.status === 'active' ? 'inactive' : 'active';
-      
-      toast({
-        title: `Real-time Protection ${newStatus === 'active' ? 'Enabled' : 'Disabled'}`,
-        description: newStatus === 'active' 
-          ? "Your system is now actively protected against threats."
-          : "Warning: Your system is vulnerable without real-time protection.",
-        variant: newStatus === 'active' ? 'default' : 'destructive',
-      });
-    }
+    const feature = features.find(f => f.id === id);
+    const newStatus = feature?.status === 'active' ? 'inactive' : 'active';
+    
+    toast({
+      title: `${feature?.name} ${newStatus === 'active' ? 'Enabled' : 'Disabled'}`,
+      description: newStatus === 'active' 
+        ? `${feature?.name} is now active and protecting your system.`
+        : `Warning: ${feature?.name} has been deactivated.`,
+      variant: newStatus === 'active' ? 'default' : 'destructive',
+    });
   };
   
   return (
@@ -191,6 +191,23 @@ export default function Protection() {
                   Enable All
                 </Button>
               </div>
+              
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">Active Features</span>
+                  <span className="text-sm">{activeFeatures.length} of {features.length}</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      activeFeatures.length === features.length ? 'bg-green-500' :
+                      activeFeatures.length > features.length / 2 ? 'bg-yellow-500' :
+                      'bg-red-500'
+                    }`}
+                    style={{ width: `${(activeFeatures.length / features.length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
             </CardContent>
           </Card>
           
@@ -263,7 +280,7 @@ export default function Protection() {
             const IconComponent = iconComponents[feature.icon as keyof typeof iconComponents] || ShieldCheck;
             
             return (
-              <Card key={feature.id} className={feature.status === 'inactive' ? 'border-red-200' : ''}>
+              <Card key={feature.id} className={feature.status === 'inactive' ? 'border-red-200' : 'border-green-200'}>
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <IconComponent className={`h-5 w-5 ${feature.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -286,16 +303,12 @@ export default function Protection() {
                           {feature.status === "active" ? "Active" : "Inactive"}
                         </span>
                       </div>
-                      <Button 
-                        variant={feature.status === "active" ? "destructive" : "default"}
-                        size="sm"
-                        onClick={() => handleToggleProtectionFeature(feature.id)}
-                      >
-                        {feature.status === "active" ? "Disable" : "Enable"}
-                      </Button>
+                      <Switch 
+                        checked={feature.status === "active"}
+                        onCheckedChange={() => handleToggleProtectionFeature(feature.id)}
+                      />
                     </div>
                     <div className="flex items-center text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3 mr-1" />
                       Updated {feature.lastUpdated}
                     </div>
                   </div>
