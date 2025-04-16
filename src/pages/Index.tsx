@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
@@ -126,12 +125,7 @@ export default function Index() {
           />
         )}
       </main>
-      <footer className="border-t py-4">
-        <div className="container text-center text-sm text-muted-foreground">
-          <p>© 2023 Sentinel-AI Guardian Shield. All rights reserved.</p>
-          <p className="text-xs mt-1">Safeguarding your digital world with AI-powered protection.</p>
-        </div>
-      </footer>
+      {/* Footer removed as requested */}
     </div>
   );
 }

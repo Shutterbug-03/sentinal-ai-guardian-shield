@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,6 @@ import {
   Settings,
   LineChart,
   Lock,
-  Brain,
   Scan
 } from "lucide-react";
 import { useProtectionStore } from "@/store/protectionStore";
@@ -51,10 +49,11 @@ export function Dashboard({ onStartScan, lastScanDate = "", threatsDetected = 0 
       <div className="flex justify-center w-full">
         <Button 
           onClick={onStartScan}
-          className="px-8 py-6 text-lg font-medium flex items-center gap-3 shadow-lg hover:shadow-xl transition-all"
+          className="px-8 py-6 text-lg font-medium flex items-center gap-3 shadow-lg hover:shadow-xl transition-all rounded-full"
         >
           <Scan className="h-6 w-6" />
-          Start New System Scan
+          New Scan
+          <span className="text-xs text-muted-foreground ml-2">Detect potential threats</span>
         </Button>
       </div>
 
