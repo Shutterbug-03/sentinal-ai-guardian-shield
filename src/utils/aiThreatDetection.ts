@@ -33,82 +33,20 @@ const severityToNumber: Record<string, number> = {
 
 // Initialize the model
 export async function initializeThreatModel(scanHistory: ScanHistoryItem[]): Promise<void> {
-  try {
-    // Load TF.js core
-    await tf.ready();
-    console.log('TensorFlow.js loaded successfully');
-    
-    // Extract threats from scan history
-    const allThreats = scanHistory.flatMap(scan => scan.threats);
-    
-    if (allThreats.length < 5) {
-      console.log('Not enough threat data to train a model');
-      // Create a simple default model for demo purposes
-      createDefaultModel();
-      return;
-    }
-
-    // Create a simple model
-    threatDetectionModel = tf.sequential();
-    
-    // Add layers to the model
-    threatDetectionModel.add(tf.layers.dense({
-      units: 10,
-      inputShape: [2],
-      activation: 'relu'
-    }));
-    
-    threatDetectionModel.add(tf.layers.dense({
-      units: 1,
-      activation: 'sigmoid'
-    }));
-    
-    // Compile the model
-    threatDetectionModel.compile({
-      optimizer: tf.train.adam(),
-      loss: 'binaryCrossentropy',
-      metrics: ['accuracy']
-    });
-    
-    // Prepare training data
-    const features = allThreats.map(threat => [
-      threatTypeToNumber[threat.type] || 0,
-      severityToNumber[threat.severity] || 0
-    ]);
-    
-    // Simple labeling: higher severity threats are more dangerous
-    const labels = allThreats.map(threat => 
-      severityToNumber[threat.severity] > 1 ? 1 : 0
-    );
-    
-    // Convert to tensors
-    const xs = tf.tensor2d(features);
-    const ys = tf.tensor1d(labels);
-    
-    // Train the model
-    await threatDetectionModel.fit(xs, ys, {
-      epochs: 10,
-      batchSize: 4,
-      shuffle: true
-    });
-    
-    console.log('Threat detection model trained successfully');
-    
-    // Clean up tensors
-    xs.dispose();
-    ys.dispose();
-  } catch (error) {
-    console.error('Error initializing threat model:', error);
-    createDefaultModel();
+  // Extract threats from scan history
+  const allThreats = scanHistory.flatMap(scan => scan.threats);
+  
+  if (allThreats.length < 5) {
+    console.log('Not enough threat data to train a model');
+    return;
   }
-}
 
-// Create a default model for demo purposes when no data is available
-function createDefaultModel(): void {
+  // Create a simple model
   threatDetectionModel = tf.sequential();
   
+  // Add layers to the model
   threatDetectionModel.add(tf.layers.dense({
-    units: 4,
+    units: 10,
     inputShape: [2],
     activation: 'relu'
   }));
@@ -118,13 +56,40 @@ function createDefaultModel(): void {
     activation: 'sigmoid'
   }));
   
+  // Compile the model
   threatDetectionModel.compile({
     optimizer: tf.train.adam(),
     loss: 'binaryCrossentropy',
     metrics: ['accuracy']
   });
   
-  console.log('Default threat model created for demo');
+  // Prepare training data
+  const features = allThreats.map(threat => [
+    threatTypeToNumber[threat.type] || 0,
+    severityToNumber[threat.severity] || 0
+  ]);
+  
+  // Simple labeling: higher severity threats are more dangerous
+  const labels = allThreats.map(threat => 
+    severityToNumber[threat.severity] > 1 ? 1 : 0
+  );
+  
+  // Convert to tensors
+  const xs = tf.tensor2d(features);
+  const ys = tf.tensor1d(labels);
+  
+  // Train the model
+  await threatDetectionModel.fit(xs, ys, {
+    epochs: 10,
+    batchSize: 4,
+    shuffle: true
+  });
+  
+  console.log('Threat detection model trained successfully');
+  
+  // Clean up tensors
+  xs.dispose();
+  ys.dispose();
 }
 
 // Analyze a file path using AI to determine if it might be suspicious
@@ -134,49 +99,35 @@ export function analyzeFilePath(filePath: string): number {
     return 0;
   }
   
-  try {
-    // Simple heuristics for demo purposes
-    const hasExecutableExtension = /\.(exe|bat|cmd|msi|dll|sh|jar)$/i.test(filePath);
-    const hasSuspiciousKeywords = /(crack|keygen|patch|warez|torrent|pirate)/i.test(filePath);
-    const isFromDownloads = filePath.includes('download') || filePath.includes('temp');
-    
-    // Convert features to what our model expects
-    const featureVector = [
-      isFromDownloads ? 1 : 0,
-      (hasExecutableExtension ? 1 : 0) + (hasSuspiciousKeywords ? 1 : 0)
-    ];
-    
-    // Run inference
-    const prediction = threatDetectionModel.predict(tf.tensor2d([featureVector])) as tf.Tensor;
-    const score = prediction.dataSync()[0];
-    
-    // Clean up
-    prediction.dispose();
-    
-    return score;
-  } catch (error) {
-    console.error('Error analyzing file path:', error);
-    return 0;
-  }
+  // Simple heuristics for demo purposes
+  const hasExecutableExtension = /\.(exe|bat|cmd|msi|dll|sh|jar)$/i.test(filePath);
+  const hasSuspiciousKeywords = /(crack|keygen|patch|warez|torrent|pirate)/i.test(filePath);
+  const isFromDownloads = filePath.includes('download') || filePath.includes('temp');
+  
+  // Convert features to what our model expects
+  const featureVector = [
+    isFromDownloads ? 1 : 0,
+    (hasExecutableExtension ? 1 : 0) + (hasSuspiciousKeywords ? 1 : 0)
+  ];
+  
+  // Run inference
+  const prediction = threatDetectionModel.predict(tf.tensor2d([featureVector])) as tf.Tensor;
+  const score = prediction.dataSync()[0];
+  
+  // Clean up
+  prediction.dispose();
+  
+  return score;
 }
 
-// Evaluate the risk level of the system based on scan history and active protections
-export function evaluateSystemRisk(scanHistory: ScanHistoryItem[], activeFeatures: number = 0): {
+// Evaluate the risk level of the system based on scan history
+export function evaluateSystemRisk(scanHistory: ScanHistoryItem[]): {
   score: number;
   status: 'safe' | 'at-risk' | 'compromised';
 } {
-  // No history means we default to the protection status
+  // No history means we can't determine risk
   if (scanHistory.length === 0) {
-    const baseScore = Math.max(0, 10 - (activeFeatures * 2));
-    let status: 'safe' | 'at-risk' | 'compromised' = 'safe';
-    
-    if (baseScore > 5) {
-      status = 'at-risk';
-    } else if (activeFeatures <= 1) {
-      status = 'at-risk';
-    }
-    
-    return { score: baseScore, status };
+    return { score: 0, status: 'safe' };
   }
 
   // Count recent threats (last 3 scans)
@@ -189,14 +140,11 @@ export function evaluateSystemRisk(scanHistory: ScanHistoryItem[], activeFeature
   const mediumCount = recentThreats.filter(t => t.severity === 'medium').length;
   
   // Calculate risk score (weighted by severity)
-  let score = criticalCount * 10 + highCount * 5 + mediumCount * 2;
-  
-  // Adjust based on active protections
-  score = Math.max(0, score - (activeFeatures * 3));
+  const score = criticalCount * 10 + highCount * 5 + mediumCount * 2;
   
   // Determine status
   let status: 'safe' | 'at-risk' | 'compromised';
-  if (criticalCount > 0 && activeFeatures < 3) {
+  if (criticalCount > 0) {
     status = 'compromised';
   } else if (highCount > 0 || score > 5) {
     status = 'at-risk';

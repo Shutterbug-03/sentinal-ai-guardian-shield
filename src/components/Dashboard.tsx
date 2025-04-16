@@ -7,6 +7,10 @@ import {
   ShieldCheck, 
   ShieldAlert, 
   ShieldX,
+  Clock, 
+  FileText, 
+  Folder,
+  ChevronRight,
   Settings,
   LineChart,
   Lock,
@@ -18,9 +22,11 @@ import { evaluateSystemRisk } from "@/utils/aiThreatDetection";
 
 interface DashboardProps {
   onStartScan: () => void;
+  lastScanDate?: string;
+  threatsDetected?: number;
 }
 
-export function Dashboard({ onStartScan }: DashboardProps) {
+export function Dashboard({ onStartScan, lastScanDate, threatsDetected = 0 }: DashboardProps) {
   const navigate = useNavigate();
   const { features, aiEnabled } = useProtectionStore();
   const { scans } = useScanHistoryStore();
@@ -29,17 +35,13 @@ export function Dashboard({ onStartScan }: DashboardProps) {
   useEffect(() => {
     // Determine protection status
     if (aiEnabled) {
-      const activeFeatureCount = features.filter(feature => feature.status === 'active').length;
-      const { status } = evaluateSystemRisk(scans, activeFeatureCount);
+      const { status } = evaluateSystemRisk(scans);
       setProtectionStatus(status === 'safe' ? 'protected' : status as any);
     } else {
       const inactiveFeatures = features.filter(feature => feature.status === 'inactive');
       setProtectionStatus(inactiveFeatures.length > 0 ? 'at-risk' : 'protected');
     }
   }, [features, scans, aiEnabled]);
-
-  // Get active protection features only
-  const activeFeatures = features.filter(feature => feature.status === 'active');
   
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -72,41 +74,60 @@ export function Dashboard({ onStartScan }: DashboardProps) {
         </CardHeader>
         <CardContent className="pb-3">
           <div className="flex flex-col space-y-4">
-            <h3 className="text-sm font-medium mb-2">Active Protection Features</h3>
-            {activeFeatures.length > 0 ? (
-              activeFeatures.map(feature => (
-                <div 
-                  key={feature.id}
-                  className="flex justify-between items-center p-2 rounded-md bg-muted/30"
-                >
-                  <div className="flex items-center gap-2">
-                    <Shield className="text-primary h-5 w-5" />
-                    <span className="text-sm font-medium">{feature.name}</span>
-                  </div>
-                  <div className="text-xs font-semibold px-2 py-1 rounded-full bg-green-500/20 text-green-500">
-                    Active
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4 text-sm text-muted-foreground">
-                No active protection features.
-                <div className="mt-2">
-                  <button 
-                    onClick={() => navigate("/protection")}
-                    className="text-primary hover:underline"
-                  >
-                    Enable protection features
-                  </button>
-                </div>
+            <div 
+              className="flex justify-between items-center cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+              onClick={() => navigate("/protection")}
+            >
+              <div className="flex items-center gap-2">
+                <Shield className="text-primary h-5 w-5" />
+                <span className="text-sm font-medium">Real-time Protection</span>
               </div>
-            )}
+              <div className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                features.find(f => f.id === 'real-time')?.status === 'active' 
+                  ? "bg-green-500/20 text-green-500" 
+                  : "bg-red-500/20 text-red-500"
+              }`}>
+                {features.find(f => f.id === 'real-time')?.status === 'active' ? "Active" : "Inactive"}
+              </div>
+            </div>
+            
+            <div 
+              className="flex justify-between items-center cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+              onClick={() => navigate("/protection")}
+            >
+              <div className="flex items-center gap-2">
+                <Brain className="text-primary h-5 w-5" />
+                <span className="text-sm font-medium">AI Protection</span>
+              </div>
+              <div className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                aiEnabled ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
+              }`}>
+                {aiEnabled ? "Active" : "Inactive"}
+              </div>
+            </div>
+
+            <div 
+              className="flex justify-between items-center cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+              onClick={() => navigate("/scan-history")}
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="text-primary h-5 w-5" />
+                <span className="text-sm font-medium">Threats Detected</span>
+              </div>
+              <div className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                threatsDetected > 0 ? "bg-red-500/20 text-red-500" : "bg-green-500/20 text-green-500"
+              }`}>
+                {threatsDetected}
+              </div>
+            </div>
             
             <button 
-              onClick={() => navigate("/protection")} 
+              onClick={onStartScan} 
               className="bg-primary text-primary-foreground hover:bg-primary/90 w-full mt-4 py-2 rounded-md flex items-center justify-center gap-2 transition-colors"
             >
-              Manage Protection Features
+              <Folder className="h-4 w-4" />
+              Start New Scan
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         </CardContent>
@@ -115,33 +136,33 @@ export function Dashboard({ onStartScan }: DashboardProps) {
       {/* Quick Stats Card */}
       <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate("/protection")}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <span>Protection Summary</span>
+          <CardTitle className="flex items-center justify-between">
+            <span>System Protection</span>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </CardTitle>
-          <CardDescription>Active security measures</CardDescription>
+          <CardDescription>Security metrics</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-4">
             <ProtectionMetric 
-              label="Active Features" 
-              value={`${activeFeatures.length}/${features.length}`} 
-              status={activeFeatures.length === features.length ? "good" : activeFeatures.length === 0 ? "critical" : "warning"} 
+              label="Virus Database" 
+              value="Updated" 
+              status="good" 
             />
             <ProtectionMetric 
-              label="AI Protection" 
-              value={aiEnabled ? "Active" : "Inactive"} 
-              status={aiEnabled ? "good" : "pending"} 
+              label="Web Protection" 
+              value={features.find(f => f.id === 'web-shield')?.status === 'active' ? "Active" : "Inactive"} 
+              status={features.find(f => f.id === 'web-shield')?.status === 'active' ? "good" : "critical"} 
+            />
+            <ProtectionMetric 
+              label="AI Engine" 
+              value={aiEnabled ? "Enabled" : "Disabled"} 
+              status={aiEnabled ? "good" : "warning"} 
             />
             <ProtectionMetric 
               label="Learning Mode" 
               value={aiEnabled && useProtectionStore.getState().aiLearningMode ? "Active" : "Inactive"} 
               status={aiEnabled && useProtectionStore.getState().aiLearningMode ? "good" : "pending"} 
-            />
-            <ProtectionMetric 
-              label="System Status" 
-              value={protectionStatus === "protected" ? "Protected" : protectionStatus === "at-risk" ? "At Risk" : "Alert"} 
-              status={protectionStatus === "protected" ? "good" : protectionStatus === "at-risk" ? "warning" : "critical"} 
             />
           </div>
         </CardContent>
@@ -150,33 +171,25 @@ export function Dashboard({ onStartScan }: DashboardProps) {
       {/* Quick Actions Cards */}
       <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate("/scan-history")}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <LineChart className="h-5 w-5 text-primary" />
+          <CardTitle className="flex items-center justify-between">
             <span>Scan History</span>
+            <LineChart className="h-5 w-5 text-muted-foreground" />
           </CardTitle>
           <CardDescription>View previous scan results</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center text-center py-4">
+            <Clock className="h-8 w-8 text-primary mb-2" />
             <p className="text-sm">Access detailed reports of previous scans and threat detections</p>
-            <button 
-              onClick={(e) => { 
-                e.stopPropagation();
-                onStartScan(); 
-              }} 
-              className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm transition-colors"
-            >
-              Run New Scan
-            </button>
           </div>
         </CardContent>
       </Card>
 
       <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate("/settings")}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-primary" />
+          <CardTitle className="flex items-center justify-between">
             <span>Settings</span>
+            <Settings className="h-5 w-5 text-muted-foreground" />
           </CardTitle>
           <CardDescription>Configure security preferences</CardDescription>
         </CardHeader>
